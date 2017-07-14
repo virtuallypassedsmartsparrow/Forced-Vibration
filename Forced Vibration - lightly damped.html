@@ -1,0 +1,294 @@
+<!doctype= html>
+
+<html>
+<head>
+
+
+  <title>Forced Vibration - lightly damped</title>
+
+<body onload="start_sim()">
+
+<div style="float: left; padding-right: 20px;">
+	<p>w = <span id="sliderforcedfreq">4</span> rad/s </p><input id="w" type="range" step="0.1" value="4" min="0" max="5" onInput="FreqChange(this.value)" onmouseup="start_sim()">
+	<!-- <p>b = <span id="slideroffset">0.5</span> m </p><input id="b" type="range" step="0.1" value="0.5" min="0" max="1" onInput="OffsetChange(this.value)" onmouseup="start_sim()"><br><br> -->
+
+</div>
+		<canvas id="myCanvas" width="502" height="350" style="border:1px solid #d3d3d3; float: left;"></canvas>
+  <script>
+function FreqChange(val) {
+	document.getElementById('sliderforcedfreq').innerHTML = val;
+}
+// function OffsetChange(val) {
+// 	document.getElementById('slideroffset').innerHTML = val;
+// }
+var ctx = getCanvas();
+var myinterval;
+var dt = 0.005; // in seconds
+//scale is 50 pixles per meter
+var scale = 50
+var canvasheight = document.getElementById('myCanvas').height / scale //canvasheight in meters
+var canvaswidth = document.getElementById('myCanvas').width / scale // canvaswidth in meters
+//inputs and geometry
+		// var m;
+		// var L;
+		// var b;
+		// var t; //thickness of rod
+		// var x_0; //x position of center of mass
+		// var y_0; //y position of center of mass
+		// //properties of rod
+		// var I_G;
+		// var I_o;
+		// //initial movements
+		// var theta;
+		// var w;
+		// var alpha; 
+		// var a_x;
+		// var a_y;
+		// var v_x;
+		// var v_y;
+		// //reactions
+		// var O_x;
+		// var O_y;
+
+		//inputs and geometry
+		var w;
+		var F1;
+		var m;
+		var k;
+		var c;
+		var x_1;
+		var x_2;
+
+		var a_1;
+		var a_2;
+		var v_1;
+		var v_2;
+//timer
+var timer;
+function start_sim(){
+	clearInterval(myinterval);
+			// //inputs and geometry
+			// m = 0.1;
+			// L = Number(document.getElementById("L").value);
+			// b = Number(document.getElementById("b").value);
+			// t = 0.1; //thickness of rod
+			// x_0 = 0.5 * canvaswidth + b; //x position of center of mass
+			// y_0 = 0.5 * canvasheight; //y position of center of mass
+			// //properties of rod
+			// I_G = (1/12) * m * L * L;
+			// I_o = I_G + m * b * b;
+			// //initial movements
+			// theta = 0;
+			// w = 0;
+			// alpha = 0; 
+			// a_x = 0;
+			// a_y = 0;
+			// v_x = 0;
+			// v_y = 0;
+			// //reactions
+			// O_x = 0;
+			// O_y = 0;
+			timer = 0;
+	x_1 = 0;
+	x_2 = 0;
+
+	a_1 = 0;
+	a_2 = 0;
+	v_1 = 0;
+	v_2 = 0;
+
+	w = Number(document.getElementById("w").value)
+	m = 8;
+	k = 15;
+	c = 5; //need to include damping so that 1) Can reach steady state and 2) amplitude not infinity. But make small because want to show that at some values of w, X1 = 0
+	F1 = 10;
+	myinterval = setInterval(function(){simulate_calcs()}, dt * 1000)
+}
+function simulate_calcs() {
+var ctx=getCanvas();
+ctx.clearRect(0,0,canvaswidth*scale,canvasheight*scale);
+	timer = timer + dt;
+	ctx.beginPath();
+	ctx.font = '20px Calibri';
+	ctx.fillStyle = 'black';
+	ctx.fillText("Time: " + Math.round(timer*10)/10 + " s", 10, 30);
+	ctx.closePath();
+	ctx.fill();
+			// //timer
+			// timer = timer + dt;
+			// ctx.fillText("Timer: " + Math.round(timer*10)/10, scale*canvaswidth/2 - 45, 30);
+			// ctx.font = "20px Arial"
+			//  ctx.closePath;
+			// //bar
+			// drawRectangleSlant(x_0 - 0.5*L*Math.cos(theta) + 0.5*t*Math.sin(theta), y_0 - 0.5*L*Math.sin(theta) - 0.5*t*Math.cos(theta), L, t, theta);
+			// //drawing Pin
+			// drawBall(canvaswidth / 2, canvasheight / 2, t / 2);
+			// //drawing reactions
+			// drawArrowSmall(0.5 * canvaswidth - O_x,0.5 * canvasheight + O_y,0.5 * canvaswidth ,0.5 * canvasheight, 'blue');
+			// //drawing gravity force
+			// drawArrowSmall(x_0, y_0, x_0, y_0 + m * 9.81, 'green');
+			// //this stops the fill from the next from affecting the last draw arrow for some reason. 
+			// ctx.beginPath();
+			// //rotation of bar
+			// alpha = m * 9.81 * b * Math.cos(theta) / I_o;
+			// w = w + alpha * dt;
+			// theta = theta + w * dt;
+			// x_0 = 0.5 * canvaswidth + b * Math.cos(theta);
+			// y_0 =  0.5 * canvasheight + b * Math.sin(theta);
+			// //Reactions
+			// a_x = - 3 * m * 9.81 * b * b * Math.sin(theta) * Math.cos(theta) / I_o;
+			// a_y = m * 9.81 * b * b * (-1 + 3 * Math.sin(theta) * Math.sin(theta)) / I_o;
+			// O_x = m * a_x;
+			// O_y = m * a_y + m * 9.81;
+
+	//drawing block 1
+	drawRectangle(canvaswidth/3 + x_1, (5/12)*canvasheight, canvaswidth/12, canvasheight/6, "rgba(245,201,63,0.8)");
+
+	//Force
+	drawArrowSmall(canvaswidth/3 +canvaswidth/24 + x_1, (5/12)*canvasheight -(1/12)*canvasheight, canvaswidth/3 +canvaswidth/24 + x_1 + F1*Math.cos(w*timer) /10, (5/12)*canvasheight -(1/12)*canvasheight, "blue");
+
+	//drawing block 2
+	drawRectangle((8/12)*canvaswidth + x_2, (5/12)*canvasheight, canvaswidth/12, canvasheight/6, "rgba(124, 198, 51, 0.8)");
+	
+
+	spring(0,canvasheight/2,canvaswidth/3 + x_1,canvasheight/2,3);
+
+	spring((5/12)*canvaswidth + x_1,canvasheight/2,(8/12)*canvaswidth + x_2,canvasheight/2,3);
+
+
+	// //forces
+	// F = m * 9.81 * Math.sin(theta) / (1 - m * r * r / I_G);
+	// N  = m * 9.81 * Math.cos(theta);
+
+	//position of ball
+	a_1 = (k/m) * x_2 - 2 * (k/m) * x_1 + (F1/m)*Math.cos(w*timer) - (c/m) * v_1;
+	a_2 = (k/m) * x_1 - (k/m) * x_2; 
+
+	v_1 = v_1 + a_1 * dt;
+	v_2 = v_2 + a_2 * dt;
+
+	x_1 = x_1 + v_1 * dt;
+	x_2 = x_2 + v_2 * dt;
+
+}
+function getCanvas() {
+	var c = document.getElementById("myCanvas");
+	return c.getContext("2d");
+} 
+
+function drawRectangle( x, y, width, height, color) {
+
+	ctx.beginPath();
+	ctx.rect(x * scale, y * scale, width * scale, height * scale);
+	ctx.fillStyle = color;
+	ctx.closePath();
+	ctx.fill();
+	// ctx.stroke();
+
+}
+
+function drawRectangleSlant(x1, y1, L, t, theta) {
+	ctx.beginPath();
+	var gr = ctx.createLinearGradient(scale * x1, scale * y1, scale * (x1 + L*Math.cos(theta)), scale * (y1 + L*Math.sin(theta)));
+	gr.addColorStop(0,'rgb(204,204,204)');
+	gr.addColorStop(0.5, 'rgb(191,191,191');
+	gr.addColorStop(1,'rgb(200,200,200)');
+	ctx.fillStyle = gr;
+	ctx.moveTo(scale * x1, scale * y1);
+	ctx.lineTo(scale * (x1 + L * Math.cos(theta)), scale * (y1 + L * Math.sin(theta)));
+	ctx.lineTo(scale * (x1 + L * Math.cos(theta) - t * Math.sin(theta)), scale * (y1 + L * Math.sin(theta) + t * Math.cos(theta)));
+	ctx.lineTo(scale * (x1 - t * Math.sin(theta)), scale * (y1 + t * Math.cos(theta)));
+	ctx.lineTo(scale * x1, scale * y1);
+	ctx.stroke();
+	ctx.fill();
+	ctx.closePath();
+}
+function drawLine(x1,y1,x2,y2) {
+	ctx.beginPath();
+	ctx.moveTo(x1 * scale,y1 * scale);
+	ctx.lineTo(x2 * scale,y2 * scale);
+	ctx.stroke();
+}
+function drawArrowLarge(x,y,x_tip,y_tip) {
+	var theta = Math.atan((y_tip - y) / (x_tip - x));
+	if (x_tip - x < 0) {
+    theta = theta + Math.PI;
+} else { 
+    theta = theta;
+}
+	ctx.beginPath();
+	ctx.moveTo(x * scale, y * scale);
+	ctx.lineTo(x_tip * scale, y_tip * scale);
+	ctx.lineTo(scale*x_tip - scale*0.3 * Math.sin(0.25 * Math.PI - theta), scale*y_tip - scale*0.3 * Math.cos(0.25 * Math.PI - theta));
+	ctx.moveTo(x_tip * scale, y_tip * scale);
+	ctx.lineTo(scale*x_tip - scale*0.3 * Math.cos(0.25 * Math.PI - theta), scale*y_tip + scale*0.3 * Math.sin(0.25 * Math.PI - theta));
+	ctx.stroke();
+	ctx.closePath();
+}
+function drawArrowSmall(x,y,x_tip,y_tip,color) {
+	// var gr = ctx.createLinearGradient(x,y,x_tip,y_tip);
+	// gr.addColorStop(0,color);
+	// gr.addColorStop(1,color);
+	//ctx.strokeStyle = gr
+	ctx.strokeStyle = color;
+	var theta = Math.atan((y_tip - y) / (x_tip - x));
+		if (x_tip - x < 0) {
+	    theta = theta + Math.PI;
+	} else { 
+	    theta = theta;
+	}
+	ctx.beginPath();
+	ctx.strokeStyle = color;
+	ctx.moveTo(x * scale, y * scale);
+	ctx.lineTo(x_tip * scale, y_tip * scale);
+	ctx.lineTo(scale*x_tip - scale*0.15 * Math.sin(Math.PI/3 - theta), scale*y_tip - scale*0.15 * Math.cos(Math.PI/3 - theta));
+	ctx.moveTo(x_tip * scale, y_tip * scale);
+	ctx.lineTo(scale*x_tip - scale*0.15 * Math.cos(Math.PI/6 - theta), scale*y_tip + scale*0.15 * Math.sin(Math.PI/6 - theta));
+	ctx.stroke();
+	ctx.closePath();
+}
+function drawBall(x1,y1,r) {
+	ctx.beginPath();
+	ctx.arc(x1 * scale,y1 * scale,r * scale,0,2*Math.PI);
+	ctx.stroke();
+}
+
+function spring(x_1,y_1,x_2,y_2,n) {
+	var h = 10;
+	var x1 = x_1 * scale;
+	var x2 = x_2 * scale;
+	var y1 = y_1 * scale;
+	var y2 = y_2 * scale;
+	var theta = Math.atan((y1-y2)/(x2-x1));
+	var d = Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/(2+4*n);
+	var gamma = Math.atan(h/(2*d));
+
+
+	if (x2-x1 < 0) {
+	    theta = theta + Math.PI;
+	} else { 
+	    theta = theta;
+	}
+	ctx.strokeStyle = "black";
+
+	ctx.beginPath();
+	//first line of spring
+	ctx.moveTo(x1,y1);
+	ctx.lineTo(x1+d*Math.cos(theta), y1-d*Math.sin(theta))
+	ctx.lineTo(x1+d*Math.cos(theta)+Math.sqrt(d*d+h*h/4)*Math.cos(gamma-theta), y1-d*Math.sin(theta)+Math.sqrt(d*d+h*h/4)*Math.sin(gamma-theta));
+	//last line of spring
+	ctx.moveTo(x2,y2);
+	ctx.lineTo(x2-d*Math.cos(theta), y2+d*Math.sin(theta));
+	ctx.lineTo(x2-d*Math.cos(theta)-Math.sqrt(d*d+h*h/4)*Math.cos(gamma-theta), y2+d*Math.sin(theta)-Math.sqrt(d*d+h*h/4)*Math.sin(gamma-theta));
+	//spring
+	ctx.moveTo(x1+d*Math.cos(theta)+Math.sqrt(d*d+h*h/4)*Math.cos(gamma-theta), y1-d*Math.sin(theta)+Math.sqrt(d*d+h*h/4)*Math.sin(gamma-theta));
+	for (i = 1; i < 2*n; i++) {
+    ctx.lineTo(x1+d*Math.cos(theta)+Math.sqrt(d*d+h*h/4)*Math.cos(gamma-theta)+(0.25+0.5*i-0.25*(Math.pow(-1,i)))*2*Math.sqrt(d*d+h*h/4)*Math.cos(gamma+theta)+(-0.25+0.5*i+0.25*(Math.pow(-1,i)))*2*Math.sqrt(d*d+h*h/4)*Math.cos(gamma-theta), y1-d*Math.sin(theta)+Math.sqrt(d*d+h*h/4)*Math.sin(gamma-theta)-(0.25+0.5*i-0.25*(Math.pow(-1,i)))*2*Math.sqrt(d*d+h*h/4)*Math.sin(gamma+theta)+(-0.25+0.5*i+0.25*(Math.pow(-1,i)))*2*Math.sqrt(d*d+h*h/4)*Math.sin(gamma-theta));
+	}
+	ctx.lineWidth = 1;
+	ctx.stroke();
+	ctx.closePath();
+}
+  </script>
+</body>
+</html>
